@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.js"></script>
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+        <div class="jumbotron">
+            <h1>Repositórios GITHUB</h1>      
+        </div>
+        <div>
+            <div class = 'row'>
+                <div class="form-group col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                    <label for="usr">Linguagem:</label>
+                    <input  type="text" class="form-control" id="language">
+                </div>
+                <div class="form-group col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                    <label for="usr">Tamanho:</label>
+                    <input type="number" class="form-control" id="size">
+                </div>
+                <div class="form-group col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                    <label for="sel1">Arquivado:</label>
+                    <select class="form-control" id="archived">
+                      <option></option>
+                      <option  >Sim</option>
+                      <option  >Não</option>
+                    </select>
+                </div>
+            </div>
+            <div class = 'row'>
+                <button id="search" type="button" class="btn">Buscar</button>
+            </div>
+        </div>
+        <div>
+            <table id="repositories" class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Linguagem</th>
+                        <th>Tamanho</th>
+                        <th>Commit</th>
+                        <th>Arquivado</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+    </body>
+</html>
+
+<script>
+    var array = [];
+    var table;
+    $('#search').on('click',function(){
+        var language = $('#language').val();
+        var archived = $('#archived').val();
+        var size = $('#size').val();
+        makeAjax();
+        var array_filtered = array;
+        if(language){
+            array_filtered = filter(language,1,array_filtered);
+        }
+        if(archived){
+            array_filtered = filter(archived,4,array_filtered);
+        }
+        if(size){
+            array_filtered = filter(size,2,array_filtered);
+        } 
+        reloadTable(array_filtered);
+
+    });
+
+    function filter(value,number,array_filtered){
+        array_filtered_new = [];
+        for(let count = 0; count < array_filtered.length; count = count + 1 ) {
+            if(array_filtered[count][number] == value){
+                array_filtered_new.push(array_filtered[count]);
+            }
+        }
+        return array_filtered_new;
+    }
+
+    function reloadTable(array_filtered){
+        table.clear().draw();
+        table.rows.add(array_filtered);
+        table.columns.adjust().draw();
+    }
+
+    function makeAjax(){
+        array = [];
+        var page = 0;
+        var responseReceived = 1;
+        // while (responseReceived) {
+        //     if(page === 10){
+        //         break
+        //     }
+            page = page +1;
+            $.ajax({
+                url: "https://api.github.com/users/gersonmdda/repos",
+                type: "GET",
+                data: {
+                    page:page,
+                    per_page:100
+                },
+                async: false,
+                success: function(response) {
+                    // array = [];
+                    responseReceived = response.length;
+                    for(let count = 0; count < response.length; count = count + 1 ) {
+                        var archived = 'Não'
+                        if(response[count].archived){
+                            archived = 'Sim'
+                        }
+                        const dateCommit = new Date(response[count].pushed_at);
+                        datetime = dateCommit.getDate()+'/'+dateCommit.getMonth()+'/'+dateCommit.getFullYear();
+                        
+                        array.push ( [
+                            response[count].full_name,
+                            response[count].language,
+                            response[count].size,
+                            '<div style="display:none">'+response[count].pushed_at+'</div>'+datetime,
+                            archived,
+                        ]);
+                    }
+                    reloadTable(array); 
+                },
+                error:function(responseReceived) {
+                    responseReceived = null;
+                    alert('Error');
+
+                }
+            });
+            
+        // }
+    }
+
+    $(document).ready( function () {
+
+        table = $('#repositories').DataTable( {
+            data: array,
+            columns: [
+                { title: "Nome" },
+                { title: "Linguagem" },
+                { title: "Tamanho" },
+                { title: "Commit" },
+                { title: "Arquivado" },
+            ],
+        });
+
+        
+        makeAjax();
+       
+    } );
+   
+</script>
