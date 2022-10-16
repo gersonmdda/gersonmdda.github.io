@@ -37,18 +37,22 @@
             </div>
         </div>
         <div>
-            <table id="repositories" class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Linguagem</th>
-                        <th>Tamanho</th>
-                        <th>Commit</th>
-                        <th>Arquivado</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+            <div class = row>
+                <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4"></div>
+                    <table id="repositories" class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Linguagem</th>
+                                <th>Tamanho</th>
+                                <th>Commit</th>
+                                <th>Arquivado</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
     </body>
@@ -78,7 +82,10 @@
 
     function filter(value,number,array_filtered){
         array_filtered_new = [];
-        for(let count = 0; count < array_filtered.length; count = count + 1 ) {
+        if(number === 1){
+             value = value.toUpperCase();
+        }  
+        for(let count = 0; count < array_filtered.length; count = count + 1 ) { 
             if(array_filtered[count][number] == value){
                 array_filtered_new.push(array_filtered[count]);
             }
@@ -144,6 +151,12 @@
 
         table = $('#repositories').DataTable( {
             data: array,
+            "oLanguage": {
+                "sSearch": "Nome"
+            },
+            "columnDefs": [
+                { "targets": [1,2,3,4], "searchable": false }
+            ],
             columns: [
                 { title: "Nome" },
                 { title: "Linguagem" },
