@@ -102,11 +102,8 @@
     function makeAjax(){
         array = [];
         var page = 0;
-        var responseReceived = 1;
-        // while (responseReceived) {
-        //     if(page === 10){
-        //         break
-        //     }
+        var responseReceived;
+        do  {
             page = page +1;
             $.ajax({
                 url: "https://api.github.com/users/gersonmdda/repos",
@@ -117,34 +114,56 @@
                 },
                 async: false,
                 success: function(response) {
-                    // array = [];
                     responseReceived = response.length;
                     for(let count = 0; count < response.length; count = count + 1 ) {
                         var archived = 'Não'
                         if(response[count].archived){
                             archived = 'Sim'
                         }
-                        const dateCommit = new Date(response[count].pushed_at);
-                        datetime = dateCommit.getDate()+'/'+dateCommit.getMonth()+'/'+dateCommit.getFullYear();
+                        var last_commit_date = ajaxGetLastCommit(response[count].full_name)
+                        if(last_commit_date){
+                            const dateCommit = new Date(last_commit_date);
+                            datetime = dateCommit.getDate()+'/'+dateCommit.getMonth()+'/'+dateCommit.getFullYear();
+                        } else {
+                            datetime = '';
+                        }
                         
                         array.push ( [
                             response[count].full_name,
                             response[count].language,
                             response[count].size,
-                            '<div style="display:none">'+response[count].pushed_at+'</div>'+datetime,
+                            '<div style="display:none">'+last_commit_date+'</div>'+datetime,
                             archived,
                         ]);
                     }
                     reloadTable(array); 
                 },
-                error:function(responseReceived) {
+                error:function(response) {
                     responseReceived = null;
                     alert('Error');
 
                 }
             });
-            
-        // }
+            if(page === 10 || responseReceived < 100){
+                break
+            }
+        }while(responseReceived)
+    }
+
+    function ajaxGetLastCommit(repository){
+        var last_commit_date = null;
+        $.ajax({
+                url: "https://api.github.com/repos/"+repository+'/commits/main',
+                type: "GET",
+                async: false,
+                success: function(response) {
+                    last_commit_date = response.commit.author.date;
+                },
+                error:function(response) {
+                    console.log(response);
+                }
+            });
+        return last_commit_date;
     }
 
     $(document).ready( function () {
